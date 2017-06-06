@@ -1,3 +1,5 @@
+/* @flow */
+
 /* eslint-env webextensions */
 
 import { addListener } from '../browser/background';
@@ -5,6 +7,16 @@ import { apiToPromise } from '../browser/utils/api';
 
 addListener('addURLToHistory', url => {
 	chrome.history.addUrl({ url });
+});
+
+addListener('authFlow', ({ domain, clientId, scope, interactive }) => {
+	const url = new URL(domain);
+	url.searchParams.set('client_id', clientId);
+	url.searchParams.set('scope', scope);
+	url.searchParams.set('response_type', 'token');
+	url.searchParams.set('redirect_uri', chrome.identity.getRedirectURL('reddit-enhancement-suite'));
+
+	return apiToPromise(chrome.identity.launchWebAuthFlow)({ url: url.href, interactive });
 });
 
 addListener('isURLVisited', async url =>
@@ -54,7 +66,7 @@ addListener('permissions', ({ operation, permissions, origins }) => {
 	if (localStorage.getItem(MIGRATED_TO_CHROME_STORAGE) !== MIGRATED_TO_CHROME_STORAGE) {
 		await Promise.all(Object.keys(localStorage).map(async key => {
 			try {
-				await set(key, JSON.parse(localStorage.getItem(key)));
+				await set(key, JSON.parse((localStorage.getItem(key): any)));
 				console.log(key);
 			} catch (e) {
 				await set(key, localStorage.getItem(key));

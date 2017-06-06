@@ -1,6 +1,10 @@
+/* @flow */
+
 /* eslint-env webextensions */
+/* eslint-disable quote-props */
 
 // include the LICENSE file
+// $FlowIgnore
 import 'file-loader?name=LICENSE!../LICENSE';
 
 import cssOff from '../images/css-off.png';
@@ -18,17 +22,9 @@ const {
 	_handleMessage,
 	sendMessage,
 	addListener,
-} = createMessageHandler(({ transaction, isResponse, ...obj }, { sendResponse, tabId }) => {
-	if (isResponse) {
-		sendResponse(obj);
-	} else {
-		_sendMessage(tabId, obj).then(obj => {
-			_handleMessage({ ...obj, transaction, isResponse: true });
-		});
-	}
-});
+} = createMessageHandler((obj, tabId) => _sendMessage(tabId, obj));
 
-chrome.runtime.onMessage.addListener((obj, sender, sendResponse) => _handleMessage(obj, { ...sender.tab, sendResponse }));
+chrome.runtime.onMessage.addListener((obj, sender, sendResponse) => _handleMessage(obj, sendResponse, sender.tab));
 
 export {
 	sendMessage,
@@ -49,53 +45,20 @@ addListener('ajax', async ({ method, url, headers, data }) => {
 	};
 });
 
-const waiting = new Map();
-addListener('authFlow', ({ operation, id, token }) => {
-	switch (operation) {
-		case 'start':
-			if (waiting.has(id)) {
-				throw new Error(`Auth handler for id: ${id} already exists.`);
-			}
-			return new Promise((resolve, reject) => waiting.set(id, { resolve, reject }));
-		case 'complete': {
-			const handler = waiting.get(id);
-			if (!handler) {
-				console.error(`No auth handler for id: ${id} (sent token: ${token}).`);
-				return false;
-			}
-			waiting.delete(id);
-			handler.resolve(token);
-			return true;
-		}
-		case 'cancel': {
-			const handler = waiting.get(id);
-			if (!handler) {
-				console.error(`No auth handler for id: ${id} (attempted cancellation).`);
-				return false;
-			}
-			waiting.delete(id);
-			handler.reject(new Error('Auth flow cancelled.'));
-			return true;
-		}
-		default:
-			throw new Error(`Invalid authFlow operation: ${operation}`);
-	}
-});
-
 addListener('i18n', locale => getLocaleDictionary(locale));
 
 // Chakra bug https://github.com/Microsoft/ChakraCore/issues/2606
 // eslint-disable-next-line arrow-body-style
-addListener('multicast', async (request, { id: tabId, incognito }) => {
+addListener('multicast', async ({ name, args, crossIncognito }, { id: tabId, incognito }) => {
 	return Promise.all(
 		(await apiToPromise(chrome.tabs.query)({ url: '*://*.reddit.com/*', status: 'complete' }))
-			.filter(tab => tab.id !== tabId && tab.incognito === incognito)
-			.map(({ id: tabId }) => sendMessage('multicast', request, { tabId }))
+			.filter(tab => tab.id !== tabId && (crossIncognito || tab.incognito === incognito))
+			.map(({ id: tabId }) => sendMessage('multicast', { name, args }, tabId))
 	);
 });
 
 chrome.pageAction.onClicked.addListener(({ id: tabId }) => {
-	sendMessage('pageActionClick', undefined, { tabId });
+	sendMessage('pageActionClick', undefined, tabId);
 });
 
 addListener('pageAction', ({ operation, state }, { id: tabId }) => {
@@ -105,8 +68,8 @@ addListener('pageAction', ({ operation, state }, { id: tabId }) => {
 			chrome.pageAction.setIcon({
 				tabId,
 				path: {
-					19: state ? cssOnSmall : cssOffSmall,
-					38: state ? cssOn : cssOff,
+					'19': state ? cssOnSmall : cssOffSmall,
+					'38': state ? cssOn : cssOff,
 				},
 			});
 			chrome.pageAction.setTitle({

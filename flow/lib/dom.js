@@ -1,3 +1,5 @@
+/* @flow */
+
 type MutationObserverInit = {
 	childList?: boolean,
 	attributes?: boolean,
@@ -37,4 +39,21 @@ declare class HTMLOptionsCollection {
 	length: number;
 	item(index: number): HTMLOptionElement;
 	namedItem(name: string): HTMLOptionElement;
+}
+
+// https://github.com/facebook/flow/blob/7b172c807fea56f8dc8f40f4539e683fa16e4b2f/lib/bom.js#L824
+// Make the constructor take map objects or strings.
+declare class URLSearchParams {
+	/*:: @@iterator(): Iterator<[string, string]>; */
+	constructor(query?: string | { [key: string]: string }): void;
+	append(name: string, value: string): void;
+	delete(name: string): void;
+	entries(): Iterator<[string, string]>;
+	forEach(callback: (value: string, name: string, params: URLSearchParams) => any, thisArg?: any): void;
+	get(name: string): string;
+	getAll(name: string): Array<string>;
+	has(name: string): boolean;
+	keys(): Iterator<string>;
+	set(name: string, value: string): void;
+	values(): Iterator<string>;
 }

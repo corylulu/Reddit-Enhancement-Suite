@@ -18,6 +18,7 @@
 	"options_page": "{{../browser/options.html}}",
 	"background": {
 		"scripts": [
+			"{{file-loader?name=[name].[ext]!url-search-params/build/url-search-params.js}}",
 			"{{./edge.entry.js}}",
 			"{{./background.entry.js}}"
 		],
@@ -28,6 +29,7 @@
 			"https://*.reddit.com/*"
 		],
 		"js": [
+			"{{file-loader?name=[name].[ext]!url-search-params/build/url-search-params.js}}",
 			"{{./edge.entry.js}}",
 			"{{../lib/main.entry.js}}"
 		],
@@ -38,6 +40,7 @@
 	}],
 	"permissions": [
 		"cookies",
+		"identity",
 		"tabs",
 		"storage",
 		"unlimitedStorage",
@@ -57,6 +60,7 @@
 		"https://api.tumblr.com/v2/blog/*/posts",
 		"https://xkcd.com/*/info.0.json",
 		"https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/*",
+		"https://content.googleapis.com/drive/v3/*",
 
 		"https://api.photobucket.com/v2/media/fromurl",
 		"https://api.onedrive.com/*",

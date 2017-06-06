@@ -68,9 +68,11 @@
     "jquery.tokeninput": "Reddit-Enhancement-Suite/jquery-tokeninput",
     "lodash": "4.17.4",
     "moment": "2.18.1",
+    "numeral": "2.0.6",
     "snudown-js": "2.0.0",
     "suncalc": "1.8.0",
     "tinycolor2": "1.4.1",
+    "url-search-params": "0.9.0",
     "whatwg-fetch": "2.0.3"
   },
   "devDependencies": {

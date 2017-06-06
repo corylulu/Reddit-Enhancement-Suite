@@ -5,8 +5,8 @@
 	"description": "{{prop-loader?description!../package.json}}",
 	"author": "{{prop-loader?author!../package.json}}",
 	"homepage_url": "{{prop-loader?homepage!../package.json}}",
-	"minimum_chrome_version": "57",
-	"minimum_opera_version": "44",
+	"minimum_chrome_version": "58",
+	"minimum_opera_version": "45",
 	"icons": {
 		"48": "{{../images/icon48.png}}",
 		"128": "{{../images/icon128.png}}"
@@ -23,6 +23,7 @@
 	},
 	"background": {
 		"scripts": [
+			"{{./chrome.entry.js}}",
 			"{{./background.entry.js}}"
 		]
 	},
@@ -31,6 +32,7 @@
 			"https://*.reddit.com/*"
 		],
 		"js": [
+			"{{./chrome.entry.js}}",
 			"{{../lib/main.entry.js}}"
 		],
 		"css": [
@@ -40,6 +42,7 @@
 	}],
 	"permissions": [
 		"cookies",
+		"identity",
 		"tabs",
 		"history",
 		"storage",
@@ -60,6 +63,7 @@
 		"https://codepen.io/api/oembed",
 		"https://api.tumblr.com/v2/blog/*/posts",
 		"https://xkcd.com/*/info.0.json",
-		"https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/*"
+		"https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/*",
+		"https://content.googleapis.com/drive/v3/*"
 	]
 }
