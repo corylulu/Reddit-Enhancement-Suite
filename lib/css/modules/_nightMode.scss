@@ -615,6 +615,8 @@
 	}
 
 	.thing .title:visited,
+	.thing.visited .title,
+	.combined-search-page .search-result.visited a,
 	.combined-search-page .search-result a:visited,
 	.combined-search-page .search-result a:visited > mark {
 		// see also _styleTweaks.scss visitedStyle

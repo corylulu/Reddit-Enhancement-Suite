@@ -1,116 +1,130 @@
 /* eslint-disable import/no-nodejs-modules */
 
-import { basename, join } from 'path';
+import path from 'path';
 
 import InertEntryPlugin from 'inert-entry-webpack-plugin';
+import LodashModuleReplacementPlugin from 'lodash-webpack-plugin';
 import ProgressBarPlugin from 'progress-bar-webpack-plugin';
 import ZipPlugin from 'zip-webpack-plugin';
 import webpack from 'webpack';
-import yargs from 'yargs';
-
-import babelrc from './.babelrc.json';
 
 const browserConfig = {
 	chrome: {
 		target: 'chrome',
 		entry: 'chrome/manifest.json',
-		environment: 'chrome/environment',
 		output: 'chrome',
+	},
+	chromebeta: {
+		target: 'chrome',
+		entry: 'chrome/beta/manifest.json',
+		output: 'chrome-beta',
 	},
 	edge: {
 		target: 'edge',
 		entry: 'edge/appxmanifest.xml',
-		environment: 'edge/environment',
-		output: 'edgeextension/manifest/Extension',
-		outputFilename: '../appxmanifest.xml',
+		output: 'edgeextension/manifest',
 		noZip: true,
-	},
-	safari: {
-		target: 'safari',
-		entry: 'safari/Info.plist',
-		environment: 'safari/environment',
-		output: 'RES.safariextension',
 	},
 	firefox: {
 		target: 'firefox',
-		entry: 'firefox/package.json',
-		environment: 'firefox/environment',
+		entry: 'firefox/manifest.json',
 		output: 'firefox',
 	},
 	firefoxbeta: {
 		target: 'firefox',
-		entry: 'firefox/beta/package.json',
-		environment: 'firefox/environment',
+		entry: 'firefox/beta/manifest.json',
 		output: 'firefox-beta',
-	},
-	node: {
-		target: 'node',
-		entry: 'node/files.json',
-		environment: 'node/environment',
-		output: 'node',
 	},
 };
 
-const browsers = (
-	typeof yargs.argv.browsers !== 'string' ? ['chrome'] :
-	yargs.argv.browsers === 'all' ? Object.keys(browserConfig) :
-	yargs.argv.browsers.split(',')
-);
+export default (env = {}) => {
+	const browsers = (
+		typeof env.browsers !== 'string' ? ['chrome'] :
+		env.browsers === 'all' ? Object.keys(browserConfig) :
+		env.browsers.split(',')
+	);
 
-const shouldZip = !!yargs.argv.zip;
-const isProduction = process.env.NODE_ENV !== 'development';
+	const isProduction = process.env.NODE_ENV !== 'development';
 
-const configs = browsers.map(b => browserConfig[b]).map(({ target, entry, environment, outputFilename, output, noZip }) => {
-	// extra transforms for Safari
-	const babelConfig = {
-		...babelrc,
-		...(target === 'safari' ? babelrc.env.safari : {}),
-		babelrc: false,
-	};
-
-	return {
-		entry: `extricate!interpolate!./${entry}`,
-		bail: isProduction,
+	const configs = browsers.map(b => browserConfig[b]).map(conf => ({
+		entry: `extricate-loader!interpolate-loader!./${conf.entry}`,
 		output: {
-			path: join(__dirname, 'dist', output),
-			filename: outputFilename || basename(entry),
+			path: path.join(__dirname, 'dist', conf.output),
+			filename: path.basename(conf.entry),
 		},
-		devtool: isProduction ? '#source-map' : '#cheap-source-map',
-		resolve: {
-			alias: {
-				browserEnvironment$: join(__dirname, environment),
-			},
-		},
+		devtool: isProduction ? 'source-map' : 'cheap-source-map',
+		bail: isProduction,
+		performance: false,
 		module: {
-			loaders: [
-				{ test: /\.entry\.js$/, loaders: ['spawn?name=[name].js', `babel?${JSON.stringify(babelConfig)}`] },
-				{ test: /\.js$/, exclude: join(__dirname, 'node_modules'), loader: 'babel', query: babelConfig },
-				{ test: /\.js$/, include: join(__dirname, 'node_modules'), loader: 'babel', query: { plugins: ['transform-dead-code-elimination', 'transform-node-env-inline'], compact: true, babelrc: false } },
-				{ test: /\.mustache$/, loader: 'mustache' },
-				{ test: /\.scss$/, loaders: ['file?name=[name].css', 'extricate?resolve=\\.js$', 'css', 'postcss', 'sass'] },
-				{ test: /\.html$/, loaders: ['file?name=[name].[ext]', 'extricate', 'html?attrs=link:href script:src'] },
-				{ test: /\.(png|gif)$/, exclude: join(__dirname, 'lib', 'images'), loader: 'file?name=[name].[ext]' },
-				{ test: /\.(png|gif)$/, include: join(__dirname, 'lib', 'images'), loader: 'url' },
-			],
-			noParse: [
-				// to use `require` in Firefox and Node
-				/_nativeRequire\.js$/,
-			],
+			rules: [{
+				test: /\.entry\.js$/,
+				use: [
+					{ loader: 'spawn-loader' },
+				],
+			}, {
+				test: /\.js$/,
+				exclude: path.join(__dirname, 'node_modules'),
+				use: [
+					{ loader: 'babel-loader' },
+				],
+			}, {
+				test: /\.js$/,
+				include: path.join(__dirname, 'node_modules'),
+				use: [
+					{
+						loader: 'babel-loader',
+						options: {
+							plugins: ['transform-dead-code-elimination', 'transform-node-env-inline'],
+							compact: true,
+							babelrc: false,
+						},
+					},
+				],
+			}, {
+				test: /\.scss$/,
+				use: [
+					{ loader: 'file-loader', options: { name: '[name].css' } },
+					{ loader: 'extricate-loader', options: { resolve: '\\.js$' } },
+					{ loader: 'css-loader' },
+					{ loader: 'postcss-loader' },
+					{ loader: 'sass-loader' },
+				],
+			}, {
+				test: /\.html$/,
+				use: [
+					{ loader: 'file-loader', options: { name: '[name].[ext]' } },
+					{ loader: 'extricate-loader' },
+					{ loader: 'html-loader', options: { attrs: ['link:href', 'script:src'] } },
+				],
+			}, {
+				test: /\.(png|gif)$/,
+				exclude: path.join(__dirname, 'lib', 'images'),
+				use: [
+					{ loader: 'file-loader', options: { name: '[name].[ext]' } },
+				],
+			}, {
+				test: /\.(png|gif)$/,
+				include: path.join(__dirname, 'lib', 'images'),
+				use: [
+					{ loader: 'url-loader' },
+				],
+			}],
 		},
 		plugins: [
 			new ProgressBarPlugin(),
 			new webpack.DefinePlugin({
 				'process.env': {
-					BUILD_TARGET: JSON.stringify(target),
+					BUILD_TARGET: JSON.stringify(conf.target),
 				},
 			}),
 			new InertEntryPlugin(),
-			(shouldZip && !noZip && new ZipPlugin({
-				path: join('..', 'zip'),
-				filename: output,
+			new LodashModuleReplacementPlugin(),
+			(env.zip && !conf.noZip && new ZipPlugin({
+				path: path.join('..', 'zip'),
+				filename: conf.output,
 			})),
 		].filter(x => x),
-	};
-});
+	}));
 
-export default (configs.length === 1 ? configs[0] : configs);
+	return (configs.length === 1 ? configs[0] : configs);
+};
