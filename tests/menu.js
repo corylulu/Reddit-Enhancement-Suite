@@ -18,8 +18,8 @@ module.exports = {
 			.url('https://www.reddit.com/wiki/pages')
 			.waitForElementVisible('#header')
 			.waitForElementVisible('#RESSettingsButton')
-			.moveToElement('#RESSettingsButton', 0, 0)
-			.pause(1000)
+			.moveToElement('#RESSettingsButton', 0, 0)			
+			.click('#RESSettingsButton')
 			.click('#SettingsConsole')
 			.waitForElementVisible('#RESConsoleContainer')
 			.end();
