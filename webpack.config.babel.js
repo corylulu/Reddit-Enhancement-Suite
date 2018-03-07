@@ -6,7 +6,6 @@ import path from 'path';
 
 import InertEntryPlugin from 'inert-entry-webpack-plugin';
 import LodashModuleReplacementPlugin from 'lodash-webpack-plugin';
-import ProgressBarPlugin from 'progress-bar-webpack-plugin';
 import ZipPlugin from 'zip-webpack-plugin';
 
 const browserConfig = {
@@ -30,6 +29,7 @@ const browserConfig = {
 		target: 'firefox',
 		entry: 'firefox/manifest.json',
 		output: 'firefox',
+		noSourcemap: true,
 	},
 	firefoxbeta: {
 		target: 'firefox',
@@ -45,16 +45,17 @@ export default (env = {}) => {
 		env.browsers.split(',')
 	);
 
-	const isProduction = process.env.NODE_ENV !== 'development';
-
 	const configs = browsers.map(b => browserConfig[b]).map(conf => ({
 		entry: `extricate-loader!interpolate-loader!./${conf.entry}`,
 		output: {
 			path: path.join(__dirname, 'dist', conf.output),
 			filename: path.basename(conf.entry),
 		},
-		devtool: isProduction ? 'source-map' : 'cheap-source-map',
-		bail: isProduction,
+		devtool: (() => {
+			if (!env.production) return 'cheap-source-map';
+			if (!conf.noSourcemap) return 'source-map';
+			return false;
+		})(),
 		node: false,
 		performance: false,
 		module: {
@@ -74,15 +75,15 @@ export default (env = {}) => {
 								'transform-export-extensions',
 								'transform-class-properties',
 								['transform-object-rest-spread', { useBuiltIns: true }],
-								'transform-es2015-modules-commonjs',
 								'transform-flow-strip-types',
 								'transform-dead-code-elimination',
 								['transform-define', {
 									'process.env.BUILD_TARGET': conf.target,
-									'process.env.NODE_ENV': isProduction ? 'production' : 'development',
+									'process.env.NODE_ENV': env.production ? 'production' : 'development',
 								}],
 								'lodash',
 							],
+							comments: !env.production,
 							babelrc: false,
 						},
 					},
@@ -97,10 +98,11 @@ export default (env = {}) => {
 							plugins: [
 								'transform-dead-code-elimination',
 								['transform-define', {
-									'process.env.NODE_ENV': isProduction ? 'production' : 'development',
+									'process.env.NODE_ENV': env.production ? 'production' : 'development',
 								}],
 							],
 							compact: true,
+							comments: false,
 							babelrc: false,
 						},
 					},
@@ -122,21 +124,24 @@ export default (env = {}) => {
 					{ loader: 'html-loader', options: { attrs: ['link:href', 'script:src'] } },
 				],
 			}, {
-				test: /\.(png|gif)$/,
+				test: /\.(png|gif|svg)$/,
 				exclude: path.join(__dirname, 'lib', 'images'),
 				use: [
 					{ loader: 'file-loader', options: { name: '[name].[ext]' } },
 				],
 			}, {
-				test: /\.(png|gif)$/,
+				test: /\.(png|gif|svg)$/,
 				include: path.join(__dirname, 'lib', 'images'),
 				use: [
 					{ loader: 'url-loader' },
 				],
 			}],
 		},
+		optimization: {
+			minimize: false,
+			concatenateModules: true,
+		},
 		plugins: [
-			new ProgressBarPlugin(),
 			new InertEntryPlugin(),
 			new LodashModuleReplacementPlugin(),
 			(env.zip && !conf.noZip && new ZipPlugin({

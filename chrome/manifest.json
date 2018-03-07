@@ -5,8 +5,8 @@
 	"description": "{{prop-loader?description!../package.json}}",
 	"author": "{{prop-loader?author!../package.json}}",
 	"homepage_url": "{{prop-loader?homepage!../package.json}}",
-	"minimum_chrome_version": "58",
-	"minimum_opera_version": "45",
+	"minimum_chrome_version": "64",
+	"minimum_opera_version": "51",
 	"icons": {
 		"48": "{{../images/icon48.png}}",
 		"128": "{{../images/icon128.png}}"
@@ -18,13 +18,12 @@
 		}
 	},
 	"options_ui": {
-		"page": "{{../browser/options.html}}",
+		"page": "{{../lib/options.html}}",
 		"open_in_tab": true
 	},
 	"background": {
 		"scripts": [
-			"{{./chrome.entry.js}}",
-			"{{./background.entry.js}}"
+			"{{../lib/background.entry.js}}"
 		]
 	},
 	"content_scripts": [{
@@ -51,8 +50,7 @@
 			"https://*.reddit.com/*.json-html?*"
 		],
 		"js": [
-			"{{./chrome.entry.js}}",
-			"{{../lib/main.entry.js}}"
+			"{{../lib/foreground.entry.js}}"
 		],
 		"css": [
 			"{{../lib/css/res.scss}}"
@@ -71,8 +69,6 @@
 	],
 	"optional_permissions": [
 		"https://api.twitter.com/*",
-		"https://onedrive.live.com/*",
-		"https://1drv.ms/*",
 		"https://backend.deviantart.com/oembed",
 		"https://api.gyazo.com/api/oembed",
 		"https://codepen.io/api/oembed",
