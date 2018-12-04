@@ -1181,6 +1181,12 @@ $title-link-visited-color: hsl(0, 0%, 65%);
 		border-color: hsl(0, 0%, 30%);
 	}
 
+	.flairrichtext[style*='color'] {
+		color: rgb(200, 200, 200) !important;
+		background-color: rgb(64, 64, 64) !important;
+		border-color: rgb(77, 77, 77);
+	}
+
 	#NERContent {
 		background-color: rgb(160, 160, 160);
 	}
@@ -1310,7 +1316,7 @@ $title-link-visited-color: hsl(0, 0%, 65%);
 		color: rgb(130, 130, 130);
 	}
 
-	.newComments {
+	.res-hasNewComments .newComments {
 		color: rgb(210, 90, 50);
 	}
 
@@ -1372,7 +1378,8 @@ $title-link-visited-color: hsl(0, 0%, 65%);
 		}
 	}
 
-	&.res-filteReddit-filterline-pad-until-ready .listing-page .content[role=main] > .spacer:nth-of-type(2)::before,
+	&.res-filteReddit-filterline-pad-until-ready.listing-page #siteTable::before,
+	&.res-filteReddit-filterline-pad-until-ready.comments-page .nestedlisting::before,
 	.res-filterline {
 		background-color: rgba(38, 38, 38, .9);
 	}
@@ -1381,8 +1388,8 @@ $title-link-visited-color: hsl(0, 0%, 65%);
 		&-filter {
 			border-bottom-color: #383838;
 
-			&-active,
-			&-active:hover {
+			&-hiding,
+			&-hiding:hover {
 				border-bottom-color: #e4e4e4;
 				color: #e4e4e4;
 			}
@@ -1399,10 +1406,6 @@ $title-link-visited-color: hsl(0, 0%, 65%);
 	}
 
 	#REScommentNavBox {
-		#commentNavBy {
-			background-color: #707070;
-		}
-
 		#commentNavUp,
 		#commentNavDown {
 			color: #434343;
@@ -1554,7 +1557,7 @@ $title-link-visited-color: hsl(0, 0%, 65%);
 		background-color: $background-color !important;
 
 		.c-close {
-			background-color: inherit;
+			background-color: $header-background-color;
 		}
 	}
 
